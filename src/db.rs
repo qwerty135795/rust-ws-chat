@@ -14,8 +14,8 @@ fn create_users_table(pool:Arc<Pool<SqliteConnectionManager>>) -> io::Result<()>
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
   	username VARCHAR(24) NOT NULL,
   	email VARCHAR(36),
-  	password_hash TEXT,
-    salt TEXT,
+  	password_hash BLOB,
+    salt BLOB,
   	created_at INTEGER DEFAULT(unixepoch()),
   	is_blocked bool DEFAULT(0)
     )",[]).map_err(|err|io::Error::new(ErrorKind::Other, err))?;
@@ -47,7 +47,7 @@ pub async fn create_user(User {username, email, password_hash, salt, ..}:User, p
         let conn = pool.get()
             .map_err(|err| io::Error::new(ErrorKind::Other, err))?;
         conn.execute("INSERT INTO users (username, email, password_hash, salt)\
-     VALUES (?1, ?2, ?3, ?4)", [&username, &email, &password_hash, &salt])
+     VALUES (?1, ?2, ?3, ?4)", (&username, &email, &password_hash, &salt))
             .map_err(|err| io::Error::new(ErrorKind::Other, err))?;
         Ok(conn.last_insert_rowid())
     }).await.map_err(|err| io::Error::new(ErrorKind::Other, err))?

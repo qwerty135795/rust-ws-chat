@@ -9,6 +9,7 @@ use std::sync::Arc;
 use axum::extract::FromRequestParts;
 use axum::{async_trait, RequestPartsExt, Router};
 use axum::http::request::Parts;
+use axum::routing::post;
 use axum_extra::headers::Authorization;
 use axum_extra::headers::authorization::Bearer;
 use axum_extra::TypedHeader;
@@ -28,6 +29,8 @@ async fn main() -> io::Result<()> {
     let pool = Arc::new(r2d2::Pool::new(manager).unwrap());
     init_db(pool.clone()).await?;
     let app = Router::new()
+        .route("/user", post(handlers::register))
+        .route("/auth", post(handlers::login))
         .with_state(pool.clone());
     let listener = TcpListener::bind("127.0.0.1:5000").await?;
 
